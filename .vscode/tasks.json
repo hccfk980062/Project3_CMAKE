@@ -1,0 +1,76 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake: Configure (x64-Debug)",
+            "type": "shell",
+            "options": {
+                "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] }
+            },
+            "command": "${workspaceFolder}\\.vscode\\run-msvc.cmd cmake --preset x64-debug",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": ["$msCompile"]
+        },
+        {
+            "label": "CMake: Build (x64-Debug)",
+            "type": "shell",
+            "options": {
+                "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] }
+            },
+            "command": "${workspaceFolder}\\.vscode\\run-msvc.cmd cmake --build ${workspaceFolder}/out/build/x64-debug",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": ["$msCompile"]
+        },
+        {
+            "label": "CMake: Configure (x64-Release)",
+            "type": "shell",
+            "options": {
+                "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] }
+            },
+            "command": "${workspaceFolder}\\.vscode\\run-msvc.cmd cmake --preset x64-release",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": ["$msCompile"]
+        },
+        {
+            "label": "CMake: Build (x64-Release)",
+            "type": "shell",
+            "options": {
+                "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] }
+            },
+            "command": "${workspaceFolder}\\.vscode\\run-msvc.cmd cmake --build ${workspaceFolder}/out/build/x64-release --config Release",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": ["$msCompile"]
+        },
+        {
+            "label": "CMake: Clean (x64-Debug)",
+            "type": "shell",
+            "options": {
+                "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] }
+            },
+            "command": "${workspaceFolder}\\.vscode\\run-msvc.cmd cmake --build ${workspaceFolder}/out/build/x64-debug --target clean",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake: Rebuild (x64-Debug)",
+            "type": "shell",
+            "options": {
+                "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] }
+            },
+            "command": "${workspaceFolder}\\.vscode\\run-msvc.cmd cmake --preset x64-debug",
+            "group": "build",
+            "dependsOrder": "sequence",
+            "dependsOn": ["CMake: Clean (x64-Debug)"],
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": ["$msCompile"]
+        }
+    ]
+}
