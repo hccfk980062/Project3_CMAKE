@@ -303,7 +303,7 @@ namespace CG
 		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 
 		mesh = new TriMesh();
-		mesh->LoadFromFile("./res/models/xyzrgb_dragon_100k.obj");
+		mesh->LoadFromFile("./res/models/Armadillo.obj");
 		mesh->InitStickerShader();
 
 		return true;

@@ -24,6 +24,15 @@ const float Shininess = 128.0;
 
 void main(void)
 {
+    // ── Discard fragments on the wrong side of the sticker projection plane ──
+    // dot(pos - center, forward) < 0  means the fragment is geometrically behind
+    // the sticker center.  Allow a tolerance proportional to half-size so curved
+    // surfaces don't get clipped; back faces are much further negative and still
+    // get rejected.  This avoids relying on vertex normals which may be inverted.
+    vec3 stickerForward = normalize(cross(stickerRight, stickerUp));
+    float depthAlongForward = dot(vWorldPos - stickerCenter, stickerForward);
+    if (depthAlongForward < -max(stickerHalfSize.x, stickerHalfSize.y)) discard;
+
     // ── Planar projection ──────────────────────────────────────────
     vec3 delta = vWorldPos - stickerCenter;
     float u = dot(delta, stickerRight) / stickerHalfSize.x; // [-1, 1]
