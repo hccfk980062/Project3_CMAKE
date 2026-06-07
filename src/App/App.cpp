@@ -131,7 +131,8 @@ namespace CG
 
 				int display_w, display_h;
 				glfwGetFramebufferSize(mainWindow, &display_w, &display_h);
-				mainScene->RayCastTest(mousePosRel, display_w, display_h);
+				if (display_w > 0 && display_h > 0)
+					mainScene->RayCastTest(mousePosRel, display_w, display_h);
 
 				if (mainScene->hasHitPoint)
 				{
@@ -191,6 +192,7 @@ namespace CG
 	{
 		int display_w, display_h;
 		glfwGetFramebufferSize(mainWindow, &display_w, &display_h);
+		if (display_w <= 0 || display_h <= 0) return;
 		glViewport(0, 0, display_w, display_h);
 
 		mainScene->Render(display_w, display_h);

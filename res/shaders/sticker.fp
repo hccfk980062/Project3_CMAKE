@@ -17,6 +17,7 @@ uniform float stickerRotation;    // radians, applied in UV space
 uniform vec2  stickerOffset;      // UV translation
 uniform vec2  stickerRepeat;      // tiling count (>= 1)
 uniform float stickerBlend;       // opacity 0..1
+uniform vec3  stickerTint;        // RGB color multiplier (1,1,1 = no tint)
 
 out vec4 vFragColor;
 
@@ -72,8 +73,8 @@ void main(void)
     vec3 R = normalize(reflect(-L, N));
     float spec = (diff > 0.0) ? pow(max(0.0, dot(N, R)), Shininess) : 0.0;
 
-    // ambient 0.15 + diffuse 0.85 + subtle specular
-    vec3 litColor = texColor.rgb * (0.15 + 0.85 * diff) + 0.25 * spec;
+    // ambient 0.15 + diffuse 0.85 + subtle specular, tint applied to base color
+    vec3 litColor = texColor.rgb * stickerTint * (0.15 + 0.85 * diff) + 0.25 * spec;
 
     vFragColor = vec4(litColor, texColor.a * stickerBlend);
 }

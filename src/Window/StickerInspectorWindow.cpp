@@ -72,11 +72,12 @@ namespace CG
 		// ── Transform parameters (live — changes appear immediately) ─
 		if (ImGui::Combo("Projection Axis", &s.projAxis, kAxisLabels, 7))
 			targetScene->RefreezeProjectionVectors(s);
-		ImGui::SliderFloat("World Size", &s.scale,    0.01f,  2.0f);
-		ImGui::SliderFloat2("UV Offset", &s.offset.x, -2.0f,  2.0f);
-		ImGui::SliderFloat2("UV Tiling", &s.repeat.x,  0.1f,  8.0f);
-		ImGui::SliderFloat("Rotation",   &s.rotation, -180.0f, 180.0f);
-		ImGui::SliderFloat("Blend",      &s.blend,     0.0f,   1.0f);
+		ImGui::DragFloat("World Size", &s.scale,    0.005f,  0.01f,  2.0f);
+		ImGui::DragFloat2("UV Offset", &s.offset.x, 0.01f,  -2.0f,  2.0f);
+		ImGui::DragFloat2("UV Tiling", &s.repeat.x, 0.01f,   0.1f,  8.0f);
+		ImGui::DragFloat("Rotation",   &s.rotation, 1.0f,   -180.0f, 180.0f);
+		ImGui::DragFloat("Blend",      &s.blend,    0.005f,  0.0f,   1.0f);
+		ImGui::ColorEdit3("Tint Color", &s.tintColor.x);
 
 		ImGui::Spacing();
 		ImGui::Separator();

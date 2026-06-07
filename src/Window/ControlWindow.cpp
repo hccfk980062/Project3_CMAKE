@@ -43,9 +43,10 @@ namespace CG
 		s.repeat   = current_texture->scale;
 		s.rotation = current_texture->rotationDegrees;
 		s.offset   = current_texture->offset;
-		s.blend    = current_texture->mix;
-		s.projAxis = current_texture->projAxis;
-		s.center   = center;
+		s.blend     = current_texture->mix;
+		s.projAxis  = current_texture->projAxis;
+		s.tintColor = current_texture->tintColor;
+		s.center    = center;
 		s.enabled  = true;
 
 		if (targetScene->LoadStickerTextureIntoState(current_texture->relativePath.c_str(), s))
@@ -102,6 +103,10 @@ namespace CG
 			}
 			else if (line.find("\"projAxis\":") != std::string::npos) {
 				sscanf(line.c_str(), " %*[^:]: %d", &currentTex.projAxis);
+			}
+			else if (line.find("\"tintColor\":") != std::string::npos) {
+				sscanf(line.c_str(), " %*[^[:]: [%f, %f, %f]",
+					&currentTex.tintColor.r, &currentTex.tintColor.g, &currentTex.tintColor.b);
 			}
 
 			if (line.find("}") != std::string::npos) {
@@ -187,7 +192,8 @@ namespace CG
 			file << "    \"scale\": ["     << t.scale.x << ", "  << t.scale.y << "],\n";
 			file << "    \"rotation\": "   << t.rotationDegrees  << ",\n";
 			file << "    \"offset\": ["    << t.offset.x << ", " << t.offset.y << "],\n";
-			file << "    \"projAxis\": "   << t.projAxis         << "\n";
+			file << "    \"projAxis\": "   << t.projAxis         << ",\n";
+			file << "    \"tintColor\": [" << t.tintColor.r << ", " << t.tintColor.g << ", " << t.tintColor.b << "]\n";
 			file << "  }" << (i + 1 < textures.size() ? "," : "") << "\n";
 		}
 		file << "]\n";
@@ -197,6 +203,12 @@ namespace CG
 	void ControlWindow::Display()
 	{
 		ImGui::Begin("Sticker Library");
+
+		// ── Render Options ────────────────────────────────────────────
+		if (targetScene)
+			ImGui::Checkbox("Show Wireframe", &targetScene->showWireframe);
+
+		ImGui::Separator();
 
 		// ── Load / Browse ─────────────────────────────────────────────
 		ImGui::InputText("Path", texturePath, sizeof(texturePath));
@@ -269,11 +281,12 @@ namespace CG
 				"+Z Front", "-Z Back", "+Y Top", "-Y Bottom", "+X Right", "-X Left"
 			};
 			ImGui::Combo("Projection Axis", &current_texture->projAxis, axisLabels, 7);
-			ImGui::SliderFloat("World Size",  &current_texture->worldSize,      0.01f, 2.0f);
-			ImGui::SliderFloat2("UV Offset",  &current_texture->offset.x,      -2.0f, 2.0f);
-			ImGui::SliderFloat2("UV Tiling",  &current_texture->scale.x,        0.1f, 8.0f);
-			ImGui::SliderFloat("Rotation",    &current_texture->rotationDegrees,-180.0f, 180.0f);
-			ImGui::SliderFloat("Blend",       &current_texture->mix,             0.0f, 1.0f);
+			ImGui::DragFloat("World Size",  &current_texture->worldSize,       0.005f, 0.01f, 2.0f);
+			ImGui::DragFloat2("UV Offset",  &current_texture->offset.x,        0.01f, -2.0f, 2.0f);
+			ImGui::DragFloat2("UV Tiling",  &current_texture->scale.x,         0.01f,  0.1f, 8.0f);
+			ImGui::DragFloat("Rotation",    &current_texture->rotationDegrees,  1.0f, -180.0f, 180.0f);
+			ImGui::DragFloat("Blend",       &current_texture->mix,             0.005f,  0.0f, 1.0f);
+			ImGui::ColorEdit3("Tint Color", &current_texture->tintColor.x);
 
 			ImGui::Spacing();
 

@@ -39,7 +39,7 @@ namespace CG
 		return isRead;
 	}
 
-	void TriMesh::Render(const glm::mat4 proj, const glm::mat4 view)
+	void TriMesh::Render(const glm::mat4 proj, const glm::mat4 view, bool wireframe)
 	{
 #pragma region Solid Rendering
 		glUseProgram(programPhong);
@@ -61,21 +61,24 @@ namespace CG
 #pragma endregion
 
 #pragma region Wireframe Rendering
-		glUseProgram(programLine);
-		glBindVertexArray(wVAO);
+			glUseProgram(programLine);
+			glBindVertexArray(wVAO);
 
-		glUniformMatrix4fv(lModelID, 1, GL_FALSE, &model[0][0]);
-		glUniform3fv(lMatKdID, 1, &colorLine[0]);
+			glUniformMatrix4fv(lModelID, 1, GL_FALSE, &model[0][0]);
+			glUniform3fv(lMatKdID, 1, &colorLine[0]);
 
-		// update data to UBO for MVP
-		glBindBuffer(GL_UNIFORM_BUFFER, wUBO);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &view);
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), &proj);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+			// update data to UBO for MVP
+			glBindBuffer(GL_UNIFORM_BUFFER, wUBO);
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &view);
+			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), &proj);
+			glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		glLineWidth(1.5f);
-		// Draw wireframe mesh
-		glDrawArrays(GL_LINES, 0, this->n_edges() * 2);
+		if (wireframe)
+		{
+			glLineWidth(1.5f);
+			// Draw wireframe mesh
+			glDrawArrays(GL_LINES, 0, this->n_edges() * 2);
+		}
 #pragma endregion
 
 		// Unbind shader and VAO
@@ -236,6 +239,7 @@ namespace CG
 		stOffsetID    = glGetUniformLocation(programSticker, "stickerOffset");
 		stRepeatID    = glGetUniformLocation(programSticker, "stickerRepeat");
 		stBlendID     = glGetUniformLocation(programSticker, "stickerBlend");
+		stTintID      = glGetUniformLocation(programSticker, "stickerTint");
 		glUseProgram(0);
 	}
 
@@ -244,7 +248,8 @@ namespace CG
 		GLuint texID,
 		const glm::vec3& center, const glm::vec3& right, const glm::vec3& up,
 		const glm::vec2& halfSize, float rotation,
-		const glm::vec2& offset, const glm::vec2& repeat, float blend)
+		const glm::vec2& offset, const glm::vec2& repeat, float blend,
+		const glm::vec3& tintColor)
 	{
 		if (!programSticker || !texID) return;
 
@@ -267,6 +272,7 @@ namespace CG
 		glUniform2fv(stOffsetID,   1, &offset[0]);
 		glUniform2fv(stRepeatID,   1, &repeat[0]);
 		glUniform1f (stBlendID,    blend);
+		glUniform3fv(stTintID,     1, &tintColor[0]);
 
 		// Draw sticker on top of existing depth with alpha blending
 		glDepthFunc(GL_LEQUAL);

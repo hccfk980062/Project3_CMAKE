@@ -76,6 +76,7 @@ public:
 	}
 	glm::mat4 GetProjectionMatrix()
 	{
+		if (windowHeight == 0) return glm::mat4(1.0f);
 		return  glm::perspective(glm::radians(45.0f), (float)windowWidth / windowHeight, 0.001f, 100.0f);
 	}
 

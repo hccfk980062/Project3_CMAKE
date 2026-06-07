@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <imgui.h>
 
 namespace CG
@@ -19,6 +20,7 @@ namespace CG
 		float rotationDegrees = 0.0f;
 		glm::vec2 offset = glm::vec2(0.0f);
 		int projAxis     = 0;
+		glm::vec3 tintColor = glm::vec3(1.0f);
 	};
 
 	class ControlWindow

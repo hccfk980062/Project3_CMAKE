@@ -26,7 +26,7 @@ namespace CG
 
 		bool LoadFromFile(std::string filename);
 
-		void Render(const glm::mat4 proj, const glm::mat4 view);
+		void Render(const glm::mat4 proj, const glm::mat4 view, bool wireframe = true);
 
 		void InitStickerShader();
 		void RenderSticker(
@@ -34,7 +34,8 @@ namespace CG
 			GLuint texID,
 			const glm::vec3& center, const glm::vec3& right, const glm::vec3& up,
 			const glm::vec2& halfSize, float rotation,
-			const glm::vec2& offset, const glm::vec2& repeat, float blend);
+			const glm::vec2& offset, const glm::vec2& repeat, float blend,
+			const glm::vec3& tintColor);
 
 	private:
 		void CreateBuffers();
@@ -79,7 +80,7 @@ namespace CG
 		GLuint stViewID, stProjID, stModelID;
 		GLuint stTexID;
 		GLuint stCenterID, stRightID, stUpID, stHalfSizeID;
-		GLuint stRotationID, stOffsetID, stRepeatID, stBlendID;
+		GLuint stRotationID, stOffsetID, stRepeatID, stBlendID, stTintID;
 
 		/* Model properties */
 		glm::mat4 model;

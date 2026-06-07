@@ -35,7 +35,7 @@ namespace CG
 		glm::mat4 proj = camera->GetProjectionMatrix();
 		glm::mat4 view = camera->GetViewMatrix();
 
-		mesh->Render(proj, view);
+		mesh->Render(proj, view, showWireframe);
 
 		// Multi-sticker decal pass — rendered bottom-to-top; each composites over the previous
 		for (auto& s : stickers)
@@ -49,7 +49,7 @@ namespace CG
 			mesh->RenderSticker(proj, view,
 				s.textureID, s.center, s.projRight, s.projUp,
 				halfSize, glm::radians(s.rotation),
-				s.offset, s.repeat, s.blend);
+				s.offset, s.repeat, s.blend, s.tintColor);
 		}
 
 		if (isFaceSelected)
@@ -112,6 +112,7 @@ namespace CG
 	void MainScene::OnResize(int width, int height)
 	{
 		std::cout << "MainScene Resize: " << width << " " << height << std::endl;
+		if (width <= 0 || height <= 0) return;
 		camera->SetProjectionMatrix(width, height);
 	}
 
@@ -140,6 +141,9 @@ namespace CG
 
 	void MainScene::RayCastTest(glm::vec2 mousePosRel, int display_w, int display_h)
 	{
+		isFaceSelected = false;
+		hasHitPoint    = false;
+
 		glm::vec3 nearPointCoord = glm::unProject(
 			glm::vec3(mousePosRel.x, display_h - mousePosRel.y, 0),
 			camera->GetViewMatrix(),

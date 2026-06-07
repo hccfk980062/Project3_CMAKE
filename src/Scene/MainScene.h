@@ -38,6 +38,7 @@ namespace CG
 		glm::vec2 offset   = glm::vec2(0.0f);
 		glm::vec2 repeat   = glm::vec2(1.0f);
 		float     blend    = 1.0f;
+		glm::vec3 tintColor = glm::vec3(1.0f);  // RGB multiplier
 	};
 
 	class MainScene
@@ -69,6 +70,8 @@ namespace CG
 
 		glm::vec3 lastHitWorldPos = glm::vec3(0.0f);
 		bool      hasHitPoint     = false;
+
+		bool showWireframe = true;
 
 	private:
 		auto LoadScene() -> bool;
