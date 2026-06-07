@@ -9,6 +9,8 @@
 #include <GLFW/glfw3.h>
 
 #include "Window/ControlWindow.h"
+#include "Window/StickerHierarchyWindow.h"
+#include "Window/StickerInspectorWindow.h"
 #include "Scene/MainScene.h"
 
 namespace CG
@@ -30,20 +32,18 @@ namespace CG
     private:
         GLFWwindow* mainWindow;
 
-        ControlWindow* controlWindow;
+        ControlWindow*          controlWindow;
+        StickerHierarchyWindow* stickerHierarchyWindow;
+        StickerInspectorWindow* stickerInspectorWindow;
         bool showControlWindow;
 
         MainScene* mainScene;
 
-        double timeNow = 0;
-        double timeLast = 0;
+        double timeNow   = 0;
+        double timeLast  = 0;
         double timeDelta = 0;
 
     public:
-        MainScene* GetMainScene() const
-        {
-            return mainScene;
-        }
+        MainScene* GetMainScene() const { return mainScene; }
 	};
 }
-

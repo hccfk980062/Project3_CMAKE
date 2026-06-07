@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <Scene/MainScene.h>
 #include <vector>
@@ -13,10 +13,12 @@ namespace CG
 		std::string name;
 		std::string relativePath;
 		ImTextureID id;
-		float mix = 0.35f;
-		glm::vec2 scale = glm::vec2(1.0f);
+		float mix        = 0.35f;
+		float worldSize  = 0.3f;
+		glm::vec2 scale  = glm::vec2(1.0f);   // UV tiling
 		float rotationDegrees = 0.0f;
 		glm::vec2 offset = glm::vec2(0.0f);
+		int projAxis     = 0;
 	};
 
 	class ControlWindow
@@ -25,10 +27,14 @@ namespace CG
 		ControlWindow();
 		auto Initialize() -> bool;
 		void Display();
+		void SetTargetScene(MainScene* scene);
+
+		// Creates a new StickerState from current template and adds it to the scene
+		void PlaceNewStickerAt(const glm::vec3& center);
 
 	private:
 		void SaveAssetsToJson();
-		void LoadAssetsFromJson(); // <-- 新增：初次啟動時載入 JSON
+		void LoadAssetsFromJson();
 		void ConvertToRelativePath(const std::string& absolutePath, TextureData& tex);
 		auto LoadTextureFromFile(const std::string& filepath) -> ImTextureID;
 		auto OpenFileDialog() -> std::string;
@@ -41,8 +47,5 @@ namespace CG
 		TextureData* current_texture = nullptr;
 
 		MainScene* targetScene;
-
-	public:
-		void SetTargetScene(MainScene* scene) { targetScene = scene; }
 	};
 }

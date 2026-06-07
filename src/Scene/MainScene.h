@@ -18,22 +18,26 @@ namespace CG
 {
 	struct StickerState
 	{
-		bool      enabled    = true;
-		GLuint    textureID  = 0;
-		int       texW       = 0;
-		int       texH       = 0;
-		char      texPath[512] = "";
+		bool        enabled   = true;
+		GLuint      textureID = 0;
+		int         texW      = 0;
+		int         texH      = 0;
+		char        texPath[512] = "";
+		std::string name;
 
 		// Projection plane
-		int       projAxis   = 0;    // 0=Camera, 1=Front(+Z), 2=Back(-Z), 3=Top(+Y), 4=Bottom(-Y), 5=Right(+X), 6=Left(-X)
-		glm::vec3 center     = glm::vec3(0.0f);
+		int       projAxis = 0;   // 0=Camera, 1=+Z, 2=-Z, 3=+Y, 4=-Y, 5=+X, 6=-X
+		glm::vec3 center   = glm::vec3(0.0f);
+		// Frozen world-space projection vectors (captured at placement / axis change time)
+		glm::vec3 projRight = glm::vec3(1, 0, 0);
+		glm::vec3 projUp    = glm::vec3(0, 1, 0);
 
 		// Sticker transform
-		float     scale      = 0.3f; // half-size in world units
-		float     rotation   = 0.0f; // degrees
-		glm::vec2 offset     = glm::vec2(0.0f);
-		glm::vec2 repeat     = glm::vec2(1.0f);
-		float     blend      = 1.0f;
+		float     scale    = 0.3f;   // world-space half-extent
+		float     rotation = 0.0f;   // degrees
+		glm::vec2 offset   = glm::vec2(0.0f);
+		glm::vec2 repeat   = glm::vec2(1.0f);
+		float     blend    = 1.0f;
 	};
 
 	class MainScene
@@ -49,20 +53,27 @@ namespace CG
 		void OnResize(int width, int height);
 		void RayCastTest(glm::vec2 mousePosRel, int display_w, int display_h);
 
-		bool LoadStickerTexture(const char* path);
+		// Load a texture into a StickerState (caller provides the state)
+		bool LoadStickerTextureIntoState(const char* path, StickerState& s);
+
+		void AddSticker(StickerState s);   // adds to vector, selects it
+		void RemoveSticker(int idx);       // deletes GL texture, erases from vector
+		void RefreezeProjectionVectors(StickerState& s);  // re-captures right/up for current projAxis
 
 		Camera* camera;
 
-		// Public sticker state (read/written by ControlWindow UI)
-		StickerState sticker;
+		// All placed stickers (rendered bottom-to-top, alpha-composited)
+		std::vector<StickerState> stickers;
+		int  selectedStickerIndex = -1;
+		bool repositioningMode    = false;  // true: next mesh-click repositions selected sticker
 
-		// Last left-click hit point on mesh surface
 		glm::vec3 lastHitWorldPos = glm::vec3(0.0f);
 		bool      hasHitPoint     = false;
 
 	private:
 		auto LoadScene() -> bool;
-		void GetStickerProjectionVectors(glm::vec3& right, glm::vec3& up) const;
+		void GetStickerProjectionVectors(int projAxis, glm::vec3& right, glm::vec3& up) const;
+
 
 	private:
 		TriMesh* mesh;

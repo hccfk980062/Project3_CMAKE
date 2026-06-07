@@ -1,5 +1,4 @@
 #include <stb_image.h>
-
 #include "MainScene.h"
 
 namespace CG
@@ -7,29 +6,30 @@ namespace CG
 	MainScene::MainScene()
 	{
 		camera = nullptr;
-		mesh = nullptr;
+		mesh   = nullptr;
 	}
 
 	MainScene::~MainScene()
-	{}
+	{
+		for (auto& s : stickers)
+			if (s.textureID != 0)
+				glDeleteTextures(1, &s.textureID);
+	}
 
 	auto MainScene::Initialize(int width, int height) -> bool
 	{
 		camera = new Camera(glm::vec3(0, 0, 1));
 		camera->configureLookAt(glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 		camera->SetProjectionMatrix(width, height);
-
 		return LoadScene();
 	}
 
 	void MainScene::Update(double dt)
-	{
-
-	}
+	{}
 
 	void MainScene::Render(int screenWidth, int screenHeight)
 	{
-		glClearColor(0.0, 0.0, 0.0, 1); //black screen
+		glClearColor(0.0, 0.0, 0.0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 proj = camera->GetProjectionMatrix();
@@ -37,23 +37,19 @@ namespace CG
 
 		mesh->Render(proj, view);
 
-		// Sticker decal pass
-		if (sticker.enabled && sticker.textureID != 0)
+		// Multi-sticker decal pass — rendered bottom-to-top; each composites over the previous
+		for (auto& s : stickers)
 		{
-			glm::vec3 right, up;
-			GetStickerProjectionVectors(right, up);
+			if (!s.enabled || s.textureID == 0) continue;
 
-			float aspect = (sticker.texW > 0 && sticker.texH > 0)
-				? (float)sticker.texH / (float)sticker.texW
-				: 1.0f;
-			glm::vec2 halfSize(sticker.scale, sticker.scale * aspect);
+			float aspect = (s.texW > 0 && s.texH > 0)
+				? (float)s.texH / (float)s.texW : 1.0f;
+			glm::vec2 halfSize(s.scale, s.scale * aspect);
 
-			mesh->RenderSticker(
-				proj, view,
-				sticker.textureID,
-				sticker.center, right, up,
-				halfSize, glm::radians(sticker.rotation),
-				sticker.offset, sticker.repeat, sticker.blend);
+			mesh->RenderSticker(proj, view,
+				s.textureID, s.center, s.projRight, s.projUp,
+				halfSize, glm::radians(s.rotation),
+				s.offset, s.repeat, s.blend);
 		}
 
 		if (isFaceSelected)
@@ -117,6 +113,29 @@ namespace CG
 	{
 		std::cout << "MainScene Resize: " << width << " " << height << std::endl;
 		camera->SetProjectionMatrix(width, height);
+	}
+
+	void MainScene::AddSticker(StickerState s)
+	{
+		GetStickerProjectionVectors(s.projAxis, s.projRight, s.projUp);
+		stickers.push_back(std::move(s));
+		selectedStickerIndex = static_cast<int>(stickers.size()) - 1;
+	}
+
+	void MainScene::RefreezeProjectionVectors(StickerState& s)
+	{
+		GetStickerProjectionVectors(s.projAxis, s.projRight, s.projUp);
+	}
+
+	void MainScene::RemoveSticker(int idx)
+	{
+		if (idx < 0 || idx >= static_cast<int>(stickers.size())) return;
+		if (stickers[idx].textureID != 0)
+			glDeleteTextures(1, &stickers[idx].textureID);
+		stickers.erase(stickers.begin() + idx);
+		// Keep selection valid
+		if (selectedStickerIndex >= static_cast<int>(stickers.size()))
+			selectedStickerIndex = static_cast<int>(stickers.size()) - 1;
 	}
 
 	void MainScene::RayCastTest(glm::vec2 mousePosRel, int display_w, int display_h)
@@ -184,7 +203,6 @@ namespace CG
 
 		if (isFaceSelected)
 		{
-			// Record world-space hit point for sticker placement
 			lastHitWorldPos = nearPointCoord + closestDistance * rayDirection;
 			hasHitPoint = true;
 
@@ -211,7 +229,6 @@ namespace CG
 				glm::vec2 vertexScreenPos(screenPos.x, display_h - screenPos.y);
 
 				float distance = glm::distance(vertexScreenPos, mousePosRel);
-
 				if (distance < closestVertexDistance)
 				{
 					closestVertexDistance = distance;
@@ -228,75 +245,51 @@ namespace CG
 		}
 	}
 
-	bool MainScene::LoadStickerTexture(const char* path)
+	bool MainScene::LoadStickerTextureIntoState(const char* path, StickerState& s)
 	{
 		stbi_set_flip_vertically_on_load(true);
-
 		int w, h, channels;
 		unsigned char* data = stbi_load(path, &w, &h, &channels, 4);
+		stbi_set_flip_vertically_on_load(false);
+
 		if (!data)
 		{
 			std::cerr << "Failed to load sticker texture: " << path << "\n";
 			return false;
 		}
 
-		if (sticker.textureID != 0)
-			glDeleteTextures(1, &sticker.textureID);
+		if (s.textureID != 0)
+			glDeleteTextures(1, &s.textureID);
 
-		glGenTextures(1, &sticker.textureID);
-		glBindTexture(GL_TEXTURE_2D, sticker.textureID);
-
+		glGenTextures(1, &s.textureID);
+		glBindTexture(GL_TEXTURE_2D, s.textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
-
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 		stbi_image_free(data);
 
-		sticker.texW = w;
-		sticker.texH = h;
+		s.texW = w;
+		s.texH = h;
+		strncpy(s.texPath, path, sizeof(s.texPath) - 1);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		return true;
 	}
 
-	void MainScene::GetStickerProjectionVectors(glm::vec3& right, glm::vec3& up) const
+	void MainScene::GetStickerProjectionVectors(int projAxis, glm::vec3& right, glm::vec3& up) const
 	{
-		switch (sticker.projAxis)
+		switch (projAxis)
 		{
-		case 0:  // Camera-aligned (always faces current view)
-			right = camera->Right;
-			up    = camera->Up;
-			break;
-		case 1:  // Front  — project from +Z toward -Z
-			right = { 1, 0,  0 };
-			up    = { 0, 1,  0 };
-			break;
-		case 2:  // Back   — project from -Z toward +Z
-			right = {-1, 0,  0 };
-			up    = { 0, 1,  0 };
-			break;
-		case 3:  // Top    — project from +Y toward -Y (overhead)
-			right = { 1, 0,  0 };
-			up    = { 0, 0, -1 };
-			break;
-		case 4:  // Bottom — project from -Y toward +Y
-			right = { 1, 0,  0 };
-			up    = { 0, 0,  1 };
-			break;
-		case 5:  // Right side — project from +X toward -X
-			right = { 0, 0, -1 };
-			up    = { 0, 1,  0 };
-			break;
-		case 6:  // Left side — project from -X toward +X
-			right = { 0, 0,  1 };
-			up    = { 0, 1,  0 };
-			break;
-		default:
-			right = { 1, 0, 0 };
-			up    = { 0, 1, 0 };
+		case 0:  right = camera->Right; up = camera->Up;              break;
+		case 1:  right = { 1, 0,  0 }; up = { 0, 1,  0 };           break;
+		case 2:  right = {-1, 0,  0 }; up = { 0, 1,  0 };           break;
+		case 3:  right = { 1, 0,  0 }; up = { 0, 0, -1 };           break;
+		case 4:  right = { 1, 0,  0 }; up = { 0, 0,  1 };           break;
+		case 5:  right = { 0, 0, -1 }; up = { 0, 1,  0 };           break;
+		case 6:  right = { 0, 0,  1 }; up = { 0, 1,  0 };           break;
+		default: right = { 1, 0,  0 }; up = { 0, 1,  0 };           break;
 		}
 	}
 
