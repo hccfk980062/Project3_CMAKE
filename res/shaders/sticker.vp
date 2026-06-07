@@ -1,0 +1,31 @@
+#version 430
+
+layout(location = 0) in vec3 vPosition;
+layout(location = 1) in vec3 vertexNormal;
+
+vec3 vLightPosition = vec3(0, 10, 50);
+
+uniform mat4 View;
+uniform mat4 Projection;
+uniform mat4 Model;
+
+out vec3 vVaryingNormal;
+out vec3 vVaryingLightDir;
+out vec3 vWorldPos;
+
+void main(void)
+{
+    mat4 MVP = Projection * View * Model;
+    mat4 MV  = View * Model;
+
+    mat3 normalMatrix = mat3(MV);
+    vVaryingNormal = normalMatrix * vertexNormal;
+
+    vec4 eyePos4 = MV * vec4(vPosition, 1.0);
+    vec3 eyePos3 = eyePos4.xyz / eyePos4.w;
+    vVaryingLightDir = normalize(vLightPosition - eyePos3);
+
+    vWorldPos = (Model * vec4(vPosition, 1.0)).xyz;
+
+    gl_Position = MVP * vec4(vPosition, 1.0);
+}

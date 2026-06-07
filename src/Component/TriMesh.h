@@ -28,6 +28,14 @@ namespace CG
 
 		void Render(const glm::mat4 proj, const glm::mat4 view);
 
+		void InitStickerShader();
+		void RenderSticker(
+			const glm::mat4& proj, const glm::mat4& view,
+			GLuint texID,
+			const glm::vec3& center, const glm::vec3& right, const glm::vec3& up,
+			const glm::vec2& halfSize, float rotation,
+			const glm::vec2& offset, const glm::vec2& repeat, float blend);
+
 	private:
 		void CreateBuffers();
 
@@ -65,6 +73,13 @@ namespace CG
 		GLuint lMatVPID;
 		GLuint lModelID;
 		GLuint lMatKdID;
+
+		/* Sticker decal shader */
+		GLuint programSticker = 0;
+		GLuint stViewID, stProjID, stModelID;
+		GLuint stTexID;
+		GLuint stCenterID, stRightID, stUpID, stHalfSizeID;
+		GLuint stRotationID, stOffsetID, stRepeatID, stBlendID;
 
 		/* Model properties */
 		glm::mat4 model;

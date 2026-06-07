@@ -213,6 +213,79 @@ namespace CG
 #pragma endregion
 	}
 
+	void TriMesh::InitStickerShader()
+	{
+		ShaderInfo shaders[] = {
+			{ GL_VERTEX_SHADER,   "./res/shaders/sticker.vp" },
+			{ GL_FRAGMENT_SHADER, "./res/shaders/sticker.fp" },
+			{ GL_NONE, NULL }
+		};
+		programSticker = LoadShaders(shaders);
+		if (!programSticker) return;
+
+		glUseProgram(programSticker);
+		stViewID      = glGetUniformLocation(programSticker, "View");
+		stProjID      = glGetUniformLocation(programSticker, "Projection");
+		stModelID     = glGetUniformLocation(programSticker, "Model");
+		stTexID       = glGetUniformLocation(programSticker, "stickerTex");
+		stCenterID    = glGetUniformLocation(programSticker, "stickerCenter");
+		stRightID     = glGetUniformLocation(programSticker, "stickerRight");
+		stUpID        = glGetUniformLocation(programSticker, "stickerUp");
+		stHalfSizeID  = glGetUniformLocation(programSticker, "stickerHalfSize");
+		stRotationID  = glGetUniformLocation(programSticker, "stickerRotation");
+		stOffsetID    = glGetUniformLocation(programSticker, "stickerOffset");
+		stRepeatID    = glGetUniformLocation(programSticker, "stickerRepeat");
+		stBlendID     = glGetUniformLocation(programSticker, "stickerBlend");
+		glUseProgram(0);
+	}
+
+	void TriMesh::RenderSticker(
+		const glm::mat4& proj, const glm::mat4& view,
+		GLuint texID,
+		const glm::vec3& center, const glm::vec3& right, const glm::vec3& up,
+		const glm::vec2& halfSize, float rotation,
+		const glm::vec2& offset, const glm::vec2& repeat, float blend)
+	{
+		if (!programSticker || !texID) return;
+
+		glUseProgram(programSticker);
+		glBindVertexArray(sVAO);
+
+		glUniformMatrix4fv(stViewID,  1, GL_FALSE, &view[0][0]);
+		glUniformMatrix4fv(stProjID,  1, GL_FALSE, &proj[0][0]);
+		glUniformMatrix4fv(stModelID, 1, GL_FALSE, &model[0][0]);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texID);
+		glUniform1i(stTexID, 0);
+
+		glUniform3fv(stCenterID,   1, &center[0]);
+		glUniform3fv(stRightID,    1, &right[0]);
+		glUniform3fv(stUpID,       1, &up[0]);
+		glUniform2fv(stHalfSizeID, 1, &halfSize[0]);
+		glUniform1f (stRotationID, rotation);
+		glUniform2fv(stOffsetID,   1, &offset[0]);
+		glUniform2fv(stRepeatID,   1, &repeat[0]);
+		glUniform1f (stBlendID,    blend);
+
+		// Draw sticker on top of existing depth with alpha blending
+		glDepthFunc(GL_LEQUAL);
+		glDepthMask(GL_FALSE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glDrawArrays(GL_TRIANGLES, 0, this->n_faces() * 3);
+
+		// Restore render state
+		glDepthFunc(GL_LESS);
+		glDepthMask(GL_TRUE);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindVertexArray(0);
+		glUseProgram(0);
+	}
+
 	OpenMesh::Vec3d TriMesh::normal(const HalfedgeHandle he) const
 	{
 		const FaceHandle f = face_handle(he);
