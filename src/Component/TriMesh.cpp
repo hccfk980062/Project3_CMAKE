@@ -274,7 +274,11 @@ namespace CG
 		glUniform1f (stBlendID,    blend);
 		glUniform3fv(stTintID,     1, &tintColor[0]);
 
-		// Draw sticker on top of existing depth with alpha blending
+		// Draw sticker on top of existing depth with alpha blending.
+		// Polygon offset shifts sticker depth slightly toward the camera so
+		// it reliably wins the depth test at every camera angle (prevents Z-fighting).
+		glEnable(GL_POLYGON_OFFSET_FILL);
+		glPolygonOffset(-1.0f, -4.0f);
 		glDepthFunc(GL_LEQUAL);
 		glDepthMask(GL_FALSE);
 		glEnable(GL_BLEND);
@@ -283,6 +287,7 @@ namespace CG
 		glDrawArrays(GL_TRIANGLES, 0, this->n_faces() * 3);
 
 		// Restore render state
+		glDisable(GL_POLYGON_OFFSET_FILL);
 		glDepthFunc(GL_LESS);
 		glDepthMask(GL_TRUE);
 		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
